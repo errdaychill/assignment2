@@ -8,11 +8,11 @@ from cs231n.layer_utils import *
 
 class TwoLayerNet(object):
     """
-    A two-layer fully-connected neural network with ReLU nonlinearity and
+    A two-layer fully-connected neural network with ReLU   nonlinearity and
     softmax loss that uses a modular layer design. We assume an input dimension
     of D, a hidden dimension of H, and perform classification over C classes.
 
-    The architecure should be affine - relu - affine - softmax.
+    The architecure should be affine - relu - affine -  softmax.
 
     Note that this class does not implement gradient descent; instead, it
     will interact with a separate Solver object that is responsible for running
@@ -48,6 +48,11 @@ class TwoLayerNet(object):
         # weights and biases using the keys 'W2' and 'b2'.                         #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        self.params['W1'] = weight_scale*np.random.randn(input_dim,hidden_dim) # D H
+        self.params['W2']= weight_scale*np.random.randn(hidden_dim,num_classes)# H C
+        self.params['b1']= np.zeros(hidden_dim) # H 
+        self.params['b2']= np.zeros(num_classes) # C
+
 
         pass
 
@@ -76,13 +81,25 @@ class TwoLayerNet(object):
         - grads: Dictionary with the same keys as self.params, mapping parameter
           names to gradients of the loss with respect to those parameters.
         """
+        W1= self.params['W1']
+        W2= self.params['W2']
+        b1= self.params['b1']
+        b2= self.params['b2']
+        num_train = X.shape[0]
+       
+       
         scores = None
         ############################################################################
         # TODO: Implement the forward pass for the two-layer net, computing the    #
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        
+        X2,X2_cache = affine_forward(X,W1,b1)
+        hidden, relu_cache = relu_forward(X2)
+        scores, affine_cache = affine_forward(hidden,W2,b2)
+        
+        # hidden_cache = hidden, W2, b2
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -106,7 +123,17 @@ class TwoLayerNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        loss, dscores =softmax_loss(scores,y)
+        loss += 0.5*self.reg*(np.sum(W1**2)+np.sum(W2**2))
+         
+        dhidden,dw2,db2=affine_backward(dscores,affine_cache)
+        dx2 = relu_backward(dhidden,relu_cache)
+        dx,dw1,db1 = affine_backward(dx2,X2_cache)
+    
+        grads['W1']=dw1+self.reg*W1
+        grads['W2']=dw2+self.reg*W2
+        grads['b1']=db1
+        grads['b2']=db2
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****

@@ -61,6 +61,14 @@ def affine_backward(dout, cache):
     # TODO: Implement the affine backward pass.                               #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    D = np.prod(x.shape[1:])
+    transformed=x.reshape(x.shape[0],D)
+    dtransformed = dout.dot(w.T)# N D = D M N M  
+    dx = dtransformed.reshape(x.shape)
+    dw = transformed.T.dot(dout) #D N N M D M 
+    db = dout.sum(axis=0)
+
+
     
     pass
 
@@ -87,7 +95,7 @@ def relu_forward(x):
     # TODO: Implement the ReLU forward pass.                                  #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    out = np.maximum(0,x)
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -114,7 +122,7 @@ def relu_backward(dout, cache):
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    dx  = (x>0)*dout
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
