@@ -204,6 +204,10 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        self.params['W1'] = weight_scale*np.random.randn(input_dim,hidden_dims)
+        self.params['W2'] = weight_scale*np.random.randn(hidden_dims,num_classes)
+        self.params['b1'] = np.zeros(hidden_dims)
+        self.params['b2'] = np.zeros(num_classes)
 
         pass
 
@@ -267,7 +271,14 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        W1= self.params['W1']
+        W2= self.params['W2']
+        b1= self.params['b1']
+        b2= self.params['b2']
+        
+        
+        X2, forward_cache =affine_forward(X1,W1,b1)
+        
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
