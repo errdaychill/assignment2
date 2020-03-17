@@ -275,10 +275,14 @@ class FullyConnectedNet(object):
         W2= self.params['W2']
         b1= self.params['b1']
         b2= self.params['b2']
-        
-        
-        X2, forward_cache =affine_forward(X1,W1,b1)
-        
+        # dropout = 1이면 안씀
+        # {affine - [batch/layer norm] - relu - [dropout]} x (L - 1) - affine - softmax
+        for i in range(self.num_layers-1):
+          X2, forward_cache =affine_forward(X,W1,b1)
+          for j in range(W1.shape[1]):
+            self.bn_params[i]=(X2-X2.mean(axis=0))/np.sqrt(X2.var(axis=0))
+            X3 = relu_forward(self.bn_params[0])
+          
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
