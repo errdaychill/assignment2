@@ -277,7 +277,11 @@ class FullyConnectedNet(object):
         b2= self.params['b2']
         # dropout = 1이면 안씀
         # {affine - [batch/layer norm] - relu - [dropout]} x (L - 1) - affine - softmax
-        for i in range(self.num_layers-1):
+        layers_dim = np.hstack([input_dim,hidden_dims,num_classes])
+        for i in range(self.num_layers):
+          self.params['W'+str(i+1)] = weight_scale*np.random.randn(layers_dim[i],layers_dim[i+1])         
+          self.params['b'+str(i+1)] = np.zeros(layers_dim[i+1]) 
+
           X2, forward_cache =affine_forward(X,W1,b1)
           for j in range(W1.shape[1]):
             self.bn_params[i]=(X2-X2.mean(axis=0))/np.sqrt(X2.var(axis=0))
