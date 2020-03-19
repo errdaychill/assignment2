@@ -282,21 +282,20 @@ class FullyConnectedNet(object):
         for i in range(self.num_layers-1):
           w=self.params['W'+str(i+1)]
           b=self.params['b'+str(i+1)]
-          if self.normalization:
+          if self.normalization and self.use_dropout:
             gamma = self.params['gamma'+str(i+1)]
             beta = self.params['beta'+str(i+1)]
             bn_params = self.bn_params[i]
+          if self.use_dropout:
+            dropout_param = self.dropout_param[i]
           out, cache = affine_bn_relu_forward(x,w,b,gamma,beta,bn_param)
-          x = out
           caches.append(cache)
+          x = out
 
-        scores = affine_forward(x,self.params['W'+str(self.num_layers)],self.params['b'+str(self.num_layers)])
-            
-          
-          if i==0:
-            Xk , XK_cache = affine_forward(X,self.params['W'+str(i)])
-          if i<self.num_layers:  
-            
+        scores, cache = affine_forward(x,self.params['W'+str(self.num_layers)],self.params['b'+str(self.num_layers)])
+        caches.append(cache)    
+        
+        
 
           
         pass
@@ -325,21 +324,13 @@ class FullyConnectedNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        self.dropout_param = {}
-        if self.use_dropout:
-            self.dropout_param = {'mode': 'train', 'p': dropout}
-            if seed is not None:
-                self.dropout_param['seed'] = seed
-
-        self.bn_params = []
-        if self.normalization=='batchnorm':
-            self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
-        if self.normalization=='layernorm':
-            self.bn_params = [{} for i in range(self.num_layers - 1)]
-
-        # Cast all parameters to the correct datatype
-        for k, v in self.params.items():
-            self.params[k] = v.astype(dtype)
+        loss, softmax_grad = softmax_loss(scores,y)
+        dlastx, dlastw, dlastb=affine_backward(softmax_grad,cache[-1])
+        for i in range(self.num_layers,0,-1):
+          w=self.params['W'+str(i+1)]
+          b=self.params['b'+str(i+1)]
+          affine_bn_relu_backward(dlastx, )
+          
         
 
 
