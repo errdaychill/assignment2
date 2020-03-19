@@ -202,9 +202,16 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # might prove to be helpful.                                          #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
+        mu = x.mean(axis=0)
+        var = x.variance(axis=0)+eps
+        std = np.sqrt(var)
+        xhat = (x-mu)/std
+        out = xhat*gamma + beta
+        
+       
+        running_mean = momentum * running_mean + (1 - momentum) * mu
+        running_var = momentum * running_var + (1 - momentum) * var
+        cache = (x,mu,std,xhat,gamma,beta,var)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -217,6 +224,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # Store the result in the out variable.                               #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        out = gamma*(x-running_mean)/np.sqrt(running_var+eps) + beta
 
         pass
 
@@ -259,7 +267,25 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x,mu,std,xhat,gamma,beta,var,eps = cache
+    N, D = x.shape
 
+    dbeta = np.sum(dout,axis=0)
+    dgamma = np.sum(xhat*dout,axis=0)
+    
+    dxhat = gamma*dout
+    # refer to https://kevinzakka.github.io/2016/09/14/batch_normalization/ for computing dx
+    # chain rule = dx = dx1 + dx2 + dx2 
+    # dx1 = dxhat/dx
+    # dx2 = dmu/dx
+    # dx3 = dsigma_square/dx
+    dx1 = dxhat/np.sqrt(var) 
+    dmu = -1/np.sqrt(var)*dxhat
+    dx2 = dmu/N
+    dsigma_square = dxhat*(x-mu)*(np.sqrt(var))**(-1.5)/-2
+    dx3 = dsigma_square*2*(x-mu)/N
+
+    dx = dx1 + dx2 + dx3
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****

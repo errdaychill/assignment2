@@ -204,10 +204,16 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        self.params['W1'] = weight_scale*np.random.randn(input_dim,hidden_dims)
-        self.params['W2'] = weight_scale*np.random.randn(hidden_dims,num_classes)
-        self.params['b1'] = np.zeros(hidden_dims)
-        self.params['b2'] = np.zeros(num_classes)
+        layers_dim = np.hstack([input_dim,hidden_dims,num_classes])
+        for i in range(self.num_layers):
+          self.params['W'+str(i+1)] = weight_scale*np.random.randn(layers_dim[i],layers_dim[i+1])         
+          self.params['b'+str(i+1)] = np.zeros(layers_dim[i+1]) 
+
+        if self.normalization != None:
+          for i in range(self.num_layers-1):
+            self.params['gamma'+str(i+1)] = np.ones(layers_dim[i+1])
+            self.params['beta'+str(i+1)] = np.zeros(layers_dim[i+1])
+
 
         pass
 
@@ -271,21 +277,27 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        W1= self.params['W1']
-        W2= self.params['W2']
-        b1= self.params['b1']
-        b2= self.params['b2']
-        # dropout = 1이면 안씀
-        # {affine - [batch/layer norm] - relu - [dropout]} x (L - 1) - affine - softmax
-        layers_dim = np.hstack([input_dim,hidden_dims,num_classes])
-        for i in range(self.num_layers):
-          self.params['W'+str(i+1)] = weight_scale*np.random.randn(layers_dim[i],layers_dim[i+1])         
-          self.params['b'+str(i+1)] = np.zeros(layers_dim[i+1]) 
+        caches = []
+        x=X
+        for i in range(self.num_layers-1):
+          w=self.params['W'+str(i+1)]
+          b=self.params['b'+str(i+1)]
+          if self.normalization:
+            gamma = self.params['gamma'+str(i+1)]
+            beta = self.params['beta'+str(i+1)]
+            bn_params = self.bn_params[i]
+          out, cache = affine_bn_relu_forward(x,w,b,gamma,beta,bn_param)
+          x = out
+          caches.append(cache)
 
-          X2, forward_cache =affine_forward(X,W1,b1)
-          for j in range(W1.shape[1]):
-            self.bn_params[i]=(X2-X2.mean(axis=0))/np.sqrt(X2.var(axis=0))
-            X3 = relu_forward(self.bn_params[0])
+        scores = affine_forward(x,self.params['W'+str(self.num_layers)],self.params['b'+str(self.num_layers)])
+            
+          
+          if i==0:
+            Xk , XK_cache = affine_forward(X,self.params['W'+str(i)])
+          if i<self.num_layers:  
+            
+
           
         pass
 
@@ -313,6 +325,24 @@ class FullyConnectedNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        self.dropout_param = {}
+        if self.use_dropout:
+            self.dropout_param = {'mode': 'train', 'p': dropout}
+            if seed is not None:
+                self.dropout_param['seed'] = seed
+
+        self.bn_params = []
+        if self.normalization=='batchnorm':
+            self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
+        if self.normalization=='layernorm':
+            self.bn_params = [{} for i in range(self.num_layers - 1)]
+
+        # Cast all parameters to the correct datatype
+        for k, v in self.params.items():
+            self.params[k] = v.astype(dtype)
+        
+
+
 
         pass
 
@@ -322,3 +352,5 @@ class FullyConnectedNet(object):
         ############################################################################
 
         return loss, grads
+    
+   
