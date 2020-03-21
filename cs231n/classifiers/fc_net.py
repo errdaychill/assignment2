@@ -339,7 +339,7 @@ class FullyConnectedNet(object):
           grads['gamma'+str(i)] = dgamma
           grads['beta'+str(i)] = dbeta
           dlastx = dinput
-          
+          ddd
         loss+=self.reg*np.sum(W*W)
 
 
