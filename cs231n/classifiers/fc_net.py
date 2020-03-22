@@ -279,16 +279,18 @@ class FullyConnectedNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         caches = []
         x=X
+        gamma, beta, bn_params = None, None, None
         for i in range(self.num_layers-1):
           w=self.params['W'+str(i+1)]
           b=self.params['b'+str(i+1)]
-          if self.normalization and self.use_dropout:
+          if self.normalization :
             gamma = self.params['gamma'+str(i+1)]
             beta = self.params['beta'+str(i+1)]
             bn_params = self.bn_params[i]
-          if self.use_dropout:
-            dropout_param = self.dropout_param[i]
-          out, cache = affine_bn_relu_forward(x,w,b,gamma,beta,bn_param)
+            out, cache = affine_bn_relu_forward(x,w,b,gamma,beta,bn_params)
+          else:
+            out, cache = affine_relu_forward(x,w,b)
+            
           caches.append(cache)
           x = out
 
@@ -324,23 +326,31 @@ class FullyConnectedNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        W = self.params['W'+str(self.num_layers)]
         
         loss, softmax_grad = softmax_loss(scores,y)
-        dlastx, dlastw, dlastb=affine_backward(softmax_grad,cache[-1])
-        grads['W'+str(self.num_layers)] = dlastw + reg*2*W
-        grads['b'+str(self.num_layers)] = dlastb + reg*2*b
-        for i in range(self.num_layers,0,-1):
+          
+        for i in range(self.num_layers):
+          w=self.params['W'+str(i+1)]
+          loss+=self.reg*np.sum(w*w)
+          
+        dlastx, dlastw, dlastb=affine_backward(softmax_grad,caches[-1])
+        grads['W'+str(self.num_layers)] = dlastw + self.reg*2*self.params['W'+str(self.num_layers)]
+        grads['b'+str(self.num_layers)] = dlastb 
+        
+        for i in range(self.num_layers-1,0,-1):
           w=self.params['W'+str(i)]
           b=self.params['b'+str(i)]
-          dinput,dw,db,dgamma,dbeta=affine_bn_relu_backward(dlastx,cache[i-1])
-          grads['W'+str(i)] = dw
-          grads['b'+str(i)] = db
-          grads['gamma'+str(i)] = dgamma
-          grads['beta'+str(i)] = dbeta
+          if self.normalization:
+            dinput,dw,db,dgamma,dbeta=affine_bn_relu_backward(dlastx,caches[i-1])
+            grads['gamma'+str(i)] = dgamma
+            grads['beta'+str(i)] = dbeta
+            grads['W'+str(i)] = dw + 2*self.reg*w
+            grads['b'+str(i)] = db 
+          else:
+            dinput,dw,db=affine_relu_backward(dlastx,caches[i-1])
+            grads['W'+str(i)] = dw + 2*self.reg*w
+            grads['b'+str(i)] = db 
           dlastx = dinput
-          ddd
-        loss+=self.reg*np.sum(W*W)
 
 
 

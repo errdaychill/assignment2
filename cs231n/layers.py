@@ -203,7 +203,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         mu = x.mean(axis=0)
-        var = x.variance(axis=0)+eps
+        var = x.var(axis=0)+eps
         std = np.sqrt(var)
         xhat = (x-mu)/std
         out = xhat*gamma + beta
@@ -211,7 +211,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
        
         running_mean = momentum * running_mean + (1 - momentum) * mu
         running_var = momentum * running_var + (1 - momentum) * var
-        cache = (x,mu,std,xhat,gamma,beta,var)
+        cache = (x,mu,var,std,xhat,gamma,beta)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -267,27 +267,29 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    x,mu,std,xhat,gamma,beta,var,eps = cache
+    x,mu,var,std,xhat,gamma,beta=cache  
     N, D = x.shape
 
     dbeta = np.sum(dout,axis=0)
     dgamma = np.sum(xhat*dout,axis=0)
     
-    dxhat = gamma*dout
+    # 사실 구해보니 batchnorm_backward_alt를 구현한 것
     # refer to https://kevinzakka.github.io/2016/09/14/batch_normalization/ for computing dx
-    # chain rule = dx = dx1 + dx2 + dx2 
+    #는 분산의 편미분에서 오류가 ㅣㅆ는듯 
+    # chain rule = dx = dx1 + dx2 + dx3
     # dx1 = dxhat/dx
     # dx2 = dmu/dx
     # dx3 = dsigma_square/dx
+    dxhat = gamma*dout
     dx1 = dxhat/np.sqrt(var) 
-    dmu = -1/np.sqrt(var)*dxhat
-    dx2 = dmu/N
-    dsigma_square = dxhat*(x-mu)*(np.sqrt(var))**(-1.5)/-2
-    dx3 = dsigma_square*2*(x-mu)/N
-
+    dsigma_square = np.sum(dxhat*-0.5*(x-mu)*np.power(var,-1.5),axis=0) 
+    dx2 =dsigma_square*2*(x-mu)/N
+    dmu = -np.sum(dxhat/np.sqrt(var),axis=0)
+    dx3 = dmu/N
     dx = dx1 + dx2 + dx3
     pass
 
+   
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -320,7 +322,21 @@ def batchnorm_backward_alt(dout, cache):
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    x,mu,var,std,xhat,gamma,beta=cache  
+    N, D = x.shape
 
+    dbeta = np.sum(dout,axis=0)
+    dgamma = np.sum(xhat*dout,axis=0)
+    
+
+    dxhat = gamma*dout
+    dx1 = dxhat/np.sqrt(var) 
+    dsigma_square = np.sum(dxhat*-0.5*(x-mu)*np.power(var,-1.5),axis=0) 
+    dx2 =dsigma_square*2*(x-mu)/N
+    dmu = -np.sum(dxhat/np.sqrt(var),axis=0)
+    dx3 = dmu/N
+    dx = dx1 + dx2 + dx3
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -366,7 +382,14 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    ln_param['mode'] = 'train'
+    
+    N,D = x.shape
+    xhat, cache = batchnorm_forward(x.T, gamma.reshape((D,1)), beta.reshape((D,1)), ln_param)
+    out=xhat.T
+    #running_mean = momentum * running_mean + (1 - momentum) * mu
+    #running_var = momentum * running_var + (1 - momentum) * var
+    
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -401,6 +424,9 @@ def layernorm_backward(dout, cache):
     # still apply!                                                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x,mu,var,std,xhat,gamma,beta=cache
+      
+    dx,dgamma,dbeta = batchnorm_backward_alt(dout.T,cache)
 
     pass
 
@@ -408,7 +434,7 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    return dx, dgamma, dbeta
+    return dx.T, dgamma, dbeta
 
 
 def dropout_forward(x, dropout_param):
