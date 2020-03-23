@@ -287,7 +287,10 @@ class FullyConnectedNet(object):
             gamma = self.params['gamma'+str(i+1)]
             beta = self.params['beta'+str(i+1)]
             bn_params = self.bn_params[i]
-            out, cache = affine_bn_relu_forward(x,w,b,gamma,beta,bn_params)
+            if self.normalization =='batchnorm':
+              out, cache = affine_bn_relu_forward(x,w,b,gamma,beta,bn_params)
+            else:
+              out, cache = affine_ln_relu_forward(x,w,b,gamma,beta,bn_params)
           else:
             out, cache = affine_relu_forward(x,w,b)
             
@@ -341,12 +344,15 @@ class FullyConnectedNet(object):
           w=self.params['W'+str(i)]
           b=self.params['b'+str(i)]
           if self.normalization:
-            dinput,dw,db,dgamma,dbeta=affine_bn_relu_backward(dlastx,caches[i-1])
+            if self.normalization=='batchnorm':
+              dinput,dw,db,dgamma,dbeta=affine_bn_relu_backward(dlastx,caches[i-1])
+            else:
+              dinput,dw,db,dgamma,dbeta=affine_ln_relu_backward(dlastx,caches[i-1])
             grads['gamma'+str(i)] = dgamma
             grads['beta'+str(i)] = dbeta
             grads['W'+str(i)] = dw + 2*self.reg*w
             grads['b'+str(i)] = db 
-          else:
+          else: 
             dinput,dw,db=affine_relu_backward(dlastx,caches[i-1])
             grads['W'+str(i)] = dw + 2*self.reg*w
             grads['b'+str(i)] = db 

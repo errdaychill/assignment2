@@ -45,7 +45,7 @@ def affine_bn_relu_backward(dout,cache):
 
 def affine_ln_relu_forward(x,w,b,gamma,beta,bn_param):
     out1, cache1 = affine_forward(x,w,b)      #cache1 = x, w, b
-    out2, cache2 = layernorm_forward(out1,gamma,beta,bn_param) #cache2 = out1, gamma, beta, bn_param
+    out2, cache2 = layernorm_forward(out1,gamma,beta,bn_param) #cache2 = out1, mu, var, std, xhat, gamma, beta
     out3, cache3 = relu_forward(out2) # cache3 = out2
     cache = (cache1,cache2,cache3)
     return out3, cache

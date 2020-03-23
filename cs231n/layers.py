@@ -177,7 +177,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     N, D = x.shape
     running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
     running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
-
+    layernorm = bn_param.get('layernorm') # set for avoiding running mean/val for layernorm
     out, cache = None, None
     if mode == 'train':
         #######################################################################
@@ -208,9 +208,9 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         xhat = (x-mu)/std
         out = xhat*gamma + beta
         
-       
-        running_mean = momentum * running_mean + (1 - momentum) * mu
-        running_var = momentum * running_var + (1 - momentum) * var
+        if layernorm==0:
+          running_mean = momentum * running_mean + (1 - momentum) * mu
+          running_var = momentum * running_var + (1 - momentum) * var
         cache = (x,mu,var,std,xhat,gamma,beta)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -382,10 +382,10 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ln_param['mode'] = 'train'
     
-    N,D = x.shape
-    xhat, cache = batchnorm_forward(x.T, gamma.reshape((D,1)), beta.reshape((D,1)), ln_param)
+    ln_param['mode'] = 'train'
+    ln_param['layernorm'] = 1
+    xhat, cache = batchnorm_forward(x.T, gamma.reshape((-1,1)), beta.reshape((-1,1)), ln_param)
     out=xhat.T
     #running_mean = momentum * running_mean + (1 - momentum) * mu
     #running_var = momentum * running_var + (1 - momentum) * var
@@ -424,12 +424,14 @@ def layernorm_backward(dout, cache):
     # still apply!                                                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    x,mu,var,std,xhat,gamma,beta=cache
-      
-    dx,dgamma,dbeta = batchnorm_backward_alt(dout.T,cache)
+    x,mu,var,std,xhat,gamma,beta=cache # D N & reshape(-1,1) = (D,1)
+    
+    dx,_,_ = batchnorm_backward_alt(dout.T,cache)
+    dgamma = np.sum(dout.T*xhat,axis=1)
+    dbeta = np.sum(dout.T,axis=1)
 
     pass
-
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -476,9 +478,10 @@ def dropout_forward(x, dropout_param):
         # Store the dropout mask in the mask variable.                        #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        N,D = x.shape
+        mask = (np.random.randn(N,D)<p)/p
+        out=x*mask
         pass
-
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -488,7 +491,7 @@ def dropout_forward(x, dropout_param):
         # TODO: Implement the test phase forward pass for inverted dropout.   #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        out = x
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -519,7 +522,7 @@ def dropout_backward(dout, cache):
         # TODO: Implement training phase backward pass for inverted dropout   #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        dx = dout*mask
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
