@@ -79,7 +79,7 @@ def sgd_momentum(w, dw, config=None):
 
     return next_w, config
 
-
+adam
 
 def rmsprop(w, dw, config=None):
     """
@@ -98,7 +98,7 @@ def rmsprop(w, dw, config=None):
     config.setdefault('decay_rate', 0.99)
     config.setdefault('epsilon', 1e-8)
     config.setdefault('cache', np.zeros_like(w))
-
+    
     next_w = None
     ###########################################################################
     # TODO: Implement the RMSprop update formula, storing the next value of w #

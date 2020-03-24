@@ -568,6 +568,25 @@ def conv_forward_naive(x, w, b, conv_param):
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N,C,H,W = x.shape
+    F,C,HH,WW = w.shape
+    pad = conv_param['pad']
+    stride = conv_param['stride']
+    
+    H_next = 1 + (H+2*pad-HH) / stride
+    W_next = 1 + (W+2*pad-WW) / stride
+
+    out = np.zeros((N,F,H_next,W_next))
+
+    H = np.pad(H,(,(pad,pad)),'constant',0)
+    H = np.pad(H,(,(pad,pad)),'constant',0)
+
+    for n in range(N):
+      x[n]
+      for i in H_next:
+        for j in W_next:
+          neuron = np.sum()
+          out[N][]
 
     pass
 
