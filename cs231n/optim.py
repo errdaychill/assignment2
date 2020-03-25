@@ -79,7 +79,6 @@ def sgd_momentum(w, dw, config=None):
 
     return next_w, config
 
-adam
 
 def rmsprop(w, dw, config=None):
     """

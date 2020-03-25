@@ -568,25 +568,24 @@ def conv_forward_naive(x, w, b, conv_param):
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    N,C,H,W = x.shape
-    F,C,HH,WW = w.shape
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
     pad = conv_param['pad']
     stride = conv_param['stride']
     
-    H_next = 1 + (H+2*pad-HH) / stride
-    W_next = 1 + (W+2*pad-WW) / stride
+    H_next = int(1 + (H + 2 * pad - HH) / stride)
+    W_next = int(1 + (W + 2 * pad - WW) / stride)
 
     out = np.zeros((N,F,H_next,W_next))
+    x=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
 
-    H = np.pad(H,(,(pad,pad)),'constant',0)
-    H = np.pad(H,(,(pad,pad)),'constant',0)
-
-    for n in range(N):
-      x[n]
-      for i in H_next:
-        for j in W_next:
-          neuron = np.sum()
-          out[N][]
+    # + pad 불필요. 이미 서로의 인덱스에 맞춰서 계산됨. 행렬의 중점(중심)에 너무 신경썼다.
+    for n in range(N):            
+      for f in range(F):
+        for i in range(H_next):
+          for j in range(W_next):
+            neuron = np.sum(w[f,:]*x[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
+            out[n,f,i,j] = neuron 
 
     pass
 
@@ -616,7 +615,28 @@ def conv_backward_naive(dout, cache):
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
+    pad = conv_param['pad']
+    stride = conv_param['stride']
+    
+    H_next = int(1 + (H + 2 * pad - HH) / stride)
+    W_next = int(1 + (W + 2 * pad - WW) / stride)
 
+    out = np.zeros((N,F,H_next,W_next))
+    x=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
+
+    # + pad 불필요. 이미 서로의 인덱스에 맞춰서 계산됨. 행렬의 중점(중심)에 너무 신경썼다.
+    for n in range(N):            
+      for f in range(F):
+        for i in range(H_next):
+          for j in range(W_next):
+            neuron = np.sum(w[f,:]*x[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
+            out[n,f,i,j] = neuron 
+
+    db = dout*np.ones((F,))
+    dw = dout*
+    dx = dout* 
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
