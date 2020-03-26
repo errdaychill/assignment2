@@ -625,15 +625,20 @@ def conv_backward_naive(dout, cache):
 
     out = np.zeros((N,F,H_next,W_next))
     x=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
+    
+    dw = np.zeros(*w.shape)
+    dx = np.zeros(*x.shape)
 
-    # + pad 불필요. 이미 서로의 인덱스에 맞춰서 계산됨. 행렬의 중점(중심)에 너무 신경썼다.
     for n in range(N):            
       for f in range(F):
-        for i in range(H_next):
-          for j in range(W_next):
-            neuron = np.sum(w[f,:]*x[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
-            out[n,f,i,j] = neuron 
+        for i in range(HH):#굳이 설정?
+          for j in range(WW):#굳이 설정?
+            dw[f,:] = x[n,:]
+            dx[n,:] = 
 
+            derivative = np.sum(w[f,:]*x[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
+            out[n,f,i,j] = derivative 
+    
     db = dout*np.ones((F,))
     dw = dout*
     dx = dout* 
