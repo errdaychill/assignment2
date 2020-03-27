@@ -679,17 +679,15 @@ def max_pool_forward_naive(x, pool_param):
     poolW = pool_param['pool_width']
     stride = pool_param['stride']
     
-    outH = int(1 + H-poolH / stride)
-    outW = int(1 + W-poolW / stride)
-
+    outH = int(1 + (H-poolH) / stride)
+    outW = int(1 + (W-poolW) / stride)
     out = np.zeros((N,C,outH,outW))
 
-    for n in range(N):     
+    for n in range(N):
       for c in range(C):       
         for i in range(outH):
           for j in range(outW):
             pool_region = x[n, c, stride*i:stride*i + poolH, j*stride:j*stride + poolW]
-            print(pool_region)
             largest_feature = np.amax(pool_region)
             out[n,c,i,j]=largest_feature
       
