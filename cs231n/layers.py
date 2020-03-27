@@ -577,14 +577,14 @@ def conv_forward_naive(x, w, b, conv_param):
     W_next = int(1 + (W + 2 * pad - WW) / stride)
 
     out = np.zeros((N,F,H_next,W_next))
-    x=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
+    x_pad=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
 
     # + pad 불필요. 이미 서로의 인덱스에 맞춰서 계산됨. 행렬의 중점(중심)에 너무 신경썼다.
     for n in range(N):            
       for f in range(F):
         for i in range(H_next):
           for j in range(W_next):
-            neuron = np.sum(w[f,:]*x[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
+            neuron = np.sum(w[f,:]*x_pad[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
             out[n,f,i,j] = neuron 
 
     pass
@@ -615,33 +615,54 @@ def conv_backward_naive(dout, cache):
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    """
     N, C, H, W = x.shape
     F, _, HH, WW = w.shape
     pad = conv_param['pad']
     stride = conv_param['stride']
-    
+
     H_next = int(1 + (H + 2 * pad - HH) / stride)
     W_next = int(1 + (W + 2 * pad - WW) / stride)
-
-    out = np.zeros((N,F,H_next,W_next))
-    x=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
     
-    dw = np.zeros(*w.shape)
-    dx = np.zeros(*x.shape)
+    dw = np.zeros(w.shape)
+    dx = np.zeros(x.shape)
+    db = np.zeros(b.shape)    
 
     for n in range(N):            
       for f in range(F):
-        for i in range(HH):#굳이 설정?
-          for j in range(WW):#굳이 설정?
-            dw[f,:] = x[n,:]
-            dx[n,:] = 
+        for i in range(H_next):
+          for j in range(W_next):
+            dx[n, :, stride*i:stride*i+HH, stride*j:stride*j+WW] += w[f,:,:,:]
+            dw[f] += x[n,:,stride*i:stride*i+HH, stride*j:stride*j+WW]
+            
+            dx[n] *= dout[n,f,i,j]
+            dw[f] *= dout[n,f,i,j]
+            db[f] = np.sum(dout[n,f,:,:]) """
 
-            derivative = np.sum(w[f,:]*x[n,:,stride*i:stride*i + HH, stride*j:stride*j + WW]) +b[f]
-            out[n,f,i,j] = derivative 
+    x, w, b, conv_param = cache
     
-    db = dout*np.ones((F,))
-    dw = dout*
-    dx = dout* 
+
+    _, _, outH, outW = dout.shape
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
+    pad = conv_param['pad']
+    stride = conv_param['stride']
+
+    x_pad=np.pad(x,((0,0),(0,0),(pad,pad),(pad,pad)),mode='constant')
+
+    dw = np.zeros(w.shape)
+    dx = np.zeros(x_pad.shape)
+    db = np.zeros(b.shape)    
+  
+    for n in range(N):            
+      for f in range(F):
+        for i in range(outH):
+          for j in range(outW):
+            dx[n, :, stride*i:stride*i+HH, stride*j:stride*j+WW] += w[f,:,:,:]*dout[n,f,i,j]
+            dw[f,:,:,:] += x_pad[n,:,stride*i:stride*i+HH, stride*j:stride*j+WW]*dout[n,f,i,j]
+            
+            db[f] += np.sum(dout[n,f,i,j])
+    dx=dx[:,:,pad:-pad,pad:-pad]
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
