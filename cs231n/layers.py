@@ -615,29 +615,7 @@ def conv_backward_naive(dout, cache):
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    """
-    N, C, H, W = x.shape
-    F, _, HH, WW = w.shape
-    pad = conv_param['pad']
-    stride = conv_param['stride']
-
-    H_next = int(1 + (H + 2 * pad - HH) / stride)
-    W_next = int(1 + (W + 2 * pad - WW) / stride)
     
-    dw = np.zeros(w.shape)
-    dx = np.zeros(x.shape)
-    db = np.zeros(b.shape)    
-
-    for n in range(N):            
-      for f in range(F):
-        for i in range(H_next):
-          for j in range(W_next):
-            dx[n, :, stride*i:stride*i+HH, stride*j:stride*j+WW] += w[f,:,:,:]
-            dw[f] += x[n,:,stride*i:stride*i+HH, stride*j:stride*j+WW]
-            
-            dx[n] *= dout[n,f,i,j]
-            dw[f] *= dout[n,f,i,j]
-            db[f] = np.sum(dout[n,f,:,:]) """
 
     x, w, b, conv_param = cache
     
@@ -660,8 +638,8 @@ def conv_backward_naive(dout, cache):
           for j in range(outW):
             dx[n, :, stride*i:stride*i+HH, stride*j:stride*j+WW] += w[f,:,:,:]*dout[n,f,i,j]
             dw[f,:,:,:] += x_pad[n,:,stride*i:stride*i+HH, stride*j:stride*j+WW]*dout[n,f,i,j]
-            
             db[f] += np.sum(dout[n,f,i,j])
+    
     dx=dx[:,:,pad:-pad,pad:-pad]
     pass
 
@@ -696,7 +674,25 @@ def max_pool_forward_naive(x, pool_param):
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, C, H, W = x.shape
+    poolH = pool_param['pool_height']
+    poolW = pool_param['pool_width']
+    stride = pool_param['stride']
+    
+    outH = int(1 + H-poolH / stride)
+    outW = int(1 + W-poolW / stride)
 
+    out = np.zeros((N,C,outH,outW))
+
+    for n in range(N):     
+      for c in range(C):       
+        for i in range(outH):
+          for j in range(outW):
+            pool_region = x[n, c, stride*i:stride*i + poolH, j*stride:j*stride + poolW]
+            print(pool_region)
+            largest_feature = np.amax(pool_region)
+            out[n,c,i,j]=largest_feature
+      
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
