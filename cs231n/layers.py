@@ -688,6 +688,13 @@ def max_pool_forward_naive(x, pool_param):
         for i in range(outH):
           for j in range(outW):
             pool_region = x[n, c, stride*i:stride*i + poolH, j*stride:j*stride + poolW]
+            """ print('poolregion when  considered for each c:')
+            print(pool_region)
+            print('\n')
+            print('poolregion when considerd for all c:')
+            print(x[n,:,stride*i:stride*i + poolH, j*stride:j*stride + poolW])
+            print(np.amax(x[n,:,stride*i:stride*i + poolH, j*stride:j*stride + poolW]))
+             """# why np.amax for all channels(:) returns only the maximum value of the last channel
             largest_feature = np.amax(pool_region)
             out[n,c,i,j]=largest_feature
       
@@ -717,7 +724,7 @@ def max_pool_backward_naive(dout, cache):
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    N, C, outH, outW = dout.shape
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
