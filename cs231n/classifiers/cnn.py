@@ -54,7 +54,19 @@ class ThreeLayerConvNet(object):
         # the start of the loss() function to see how that happens.                #                           
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        #w1,b1 for cnn
+        #w2,b2, for hidden affine
+        #w3,b3 for output affine
+        
+        self.params['W1'] = weight_scale*np.random.randn(filter_size,filter_size) 
+        self.params['b1'] = np.zeros((num_filters,))
+        
+        self.params['W2'] = weight_scale*np.random.randn(np.prod(input_dim[1:]),hidden_dim)
+        self.params['b2'] = np.zeros((hidden_dim,))
+        
+        self.params['W3'] = weight_scale*np.random.randn(hidden_dim,num_classes)
+        self.params['b3'] = np.zeros((num_classes,))
+        
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -94,6 +106,10 @@ class ThreeLayerConvNet(object):
         # cs231n/layer_utils.py in your implementation (already imported).         #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        out, crp_cache = conv_relu_pool_forward(X,W1,b1,conv_param, pool_param)
+        out2, cache2 =affine_relu_forward(out,W2,b2)
+        out3, cache3 = affine_forward(out2,W3,b3)
+        loss,dout=softmax_loss(out3,y)
 
         pass
 

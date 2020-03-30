@@ -737,8 +737,6 @@ def max_pool_backward_naive(dout, cache):
           for j in range(outW):
             pooling_region = x[n,c,i*stride:i*stride+poolH,j*stride:j*stride+poolW]
             max_location = np.unravel_index(np.argmax(pooling_region), pooling_region.shape)
-            #max_location = np.argmax(x[n,c,i*stride:i*stride+poolH,j*stride:j*stride+poolW])
-            #region = dx[n,c,i*stride:i*stride+poolH,j*stride:j*stride+poolW]
             xi,yi = max_location
             pooled_region = dx[n,c,i*stride:i*stride+poolH,j*stride:j*stride+poolW] 
             pooled_region[xi,yi] += dout[n,c,i,j]
