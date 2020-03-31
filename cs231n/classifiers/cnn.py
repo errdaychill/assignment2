@@ -57,11 +57,15 @@ class ThreeLayerConvNet(object):
         #w1,b1 for cnn
         #w2,b2, for hidden affine
         #w3,b3 for output affine
+        # pass pool_param to the forward pass for the max-pooling layer
+        #pool_param = {'pool_height': 2, 'pool_width': 2, 'stride': 2}
+        poolH = 2
         
         self.params['W1'] = weight_scale*np.random.randn(filter_size,filter_size) 
         self.params['b1'] = np.zeros((num_filters,))
         
-        self.params['W2'] = weight_scale*np.random.randn(np.prod(input_dim[1:]),hidden_dim)
+        # in affine_fw, row size of weight is prod(input_dim[1:])
+        self.params['W2'] = weight_scale*np.random.randn(num_filters*(1+(input_dim[1]-poolH)//2)**2,hidden_dim)
         self.params['b2'] = np.zeros((hidden_dim,))
         
         self.params['W3'] = weight_scale*np.random.randn(hidden_dim,num_classes)
@@ -108,9 +112,9 @@ class ThreeLayerConvNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         out, crp_cache = conv_relu_pool_forward(X,W1,b1,conv_param, pool_param)
         out2, cache2 =affine_relu_forward(out,W2,b2)
-        out3, cache3 = affine_forward(out2,W3,b3)
-        loss,dout=softmax_loss(out3,y)
-
+        scores, cache3 = affine_forward(out2,W3,b3)
+        
+        cache = (crp_cache, cache2, cache3) 
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -133,7 +137,16 @@ class ThreeLayerConvNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        loss, dout=softmax_loss(scores,y)
 
+        dX3, dW3, db3 = affine_backward(dout,cache[2])
+        dX2, dW2, db2 =affine_relu_backward(dX3,cache[1])
+        dX1, dW1, db1 = conv_relu_pool_backward(dX2,cache[0])
+
+        for i in range(len(self.params)/2):
+            loss += 0.5*self.reg*np.sum(self.params['W'+str(i+1)]*self.params['W'+str(i+1)])
+            grads['W'+str(i+1)] = 
+            grads['b'+str(i+1)] = 
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
