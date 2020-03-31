@@ -60,8 +60,8 @@ class ThreeLayerConvNet(object):
         # pass pool_param to the forward pass for the max-pooling layer
         #pool_param = {'pool_height': 2, 'pool_width': 2, 'stride': 2}
         poolH = 2
-        
-        self.params['W1'] = weight_scale*np.random.randn(filter_size,filter_size) 
+        C = input_dim[0]
+        self.params['W1'] = weight_scale*np.random.randn(num_filters,C,filter_size,filter_size) 
         self.params['b1'] = np.zeros((num_filters,))
         
         # in affine_fw, row size of weight is prod(input_dim[1:])
@@ -139,14 +139,14 @@ class ThreeLayerConvNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         loss, dout=softmax_loss(scores,y)
 
-        dX3, dW3, db3 = affine_backward(dout,cache[2])
-        dX2, dW2, db2 =affine_relu_backward(dX3,cache[1])
-        dX1, dW1, db1 = conv_relu_pool_backward(dX2,cache[0])
-
-        for i in range(len(self.params)/2):
-            loss += 0.5*self.reg*np.sum(self.params['W'+str(i+1)]*self.params['W'+str(i+1)])
-            grads['W'+str(i+1)] = 
-            grads['b'+str(i+1)] = 
+        dX3, grads['W3'], grads['b3'] = affine_backward(dout,cache[2])
+        dX2, grads['W2'], grads['b2'] =affine_relu_backward(dX3,cache[1])
+        _, grads['W1'], grads['b1'] = conv_relu_pool_backward(dX2,cache[0])
+    
+        for i in range(int(len(self.params)/2)):
+            loss += 0.5*self.reg*np.sum(self.params['W'+str(i+1)]**2)
+            grads['W'+str(i+1)] += self.reg*self.params['W'+str(i+1)]
+            grads['b'+str(i+1)] += self.reg*self.params['b'+str(i+1)]
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
