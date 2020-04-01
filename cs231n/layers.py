@@ -740,9 +740,6 @@ def max_pool_backward_naive(dout, cache):
             xi,yi = max_location
             pooled_region = dx[n,c,i*stride:i*stride+poolH,j*stride:j*stride+poolW] 
             pooled_region[xi,yi] += dout[n,c,i,j]
-            
-
-
 
     pass
     
@@ -785,6 +782,13 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, C, H, W = x.shape
+    changeX = x.transpose(0,2,3,1).reshape(N*H*W,C)
+    out, cache = batchnorm_forward(changeX,gamma,beta, bn_param)
+    out=out.reshape(N,H,W,C).transpose(0,3,1,2)
+
+    #cache = (bn_cache[0],bn_cache[1])    
+
 
     pass
 
