@@ -833,7 +833,6 @@ def spatial_batchnorm_backward(dout, cache):
     print(dx.shape)
     dx=dx.reshape(N,H,W,C).transpose(0,3,1,2)
     pass
-
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -871,9 +870,25 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # and layer normalization!                                                # 
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    #gn_param['mode'] = 'train'
+    #gn_param['layernorm'] = 1 
+    N,C,H,W = x.shape
+   # C/G = num_group
 
-    pass
 
+
+
+
+    for i in range(G):
+      x_split = x[:,num_group*i:num_group*(i+1),:,:]
+      N,CC,H,W = x_split.shape
+      x_split=x_split.transpose(1,2,3,0).reshape(CC*H*W,N)
+      out, cache =batchnorm_forward(x_split,gamma[num_group*i:num_group*(i+1)],beta[num_group*i:num_group*(i+1)],gn_param)
+      out = out.reshape(CC,H,W,N).transpose(3,0,1,2)
+      
+      pass
+
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
