@@ -875,18 +875,21 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     N,C,H,W = x.shape
    # C/G = num_group
 
+    x=x.reshape(N*G,C/G*H*W).T
+    mu = np.mean(x)
+    var = np.var(x) + eps
+    std = np.sqrt(var)
+    xhat = (x-mu)/std
+    out = gamma*xhat + beta
 
 
-
-
-    for i in range(G):
-      x_split = x[:,num_group*i:num_group*(i+1),:,:]
-      N,CC,H,W = x_split.shape
-      x_split=x_split.transpose(1,2,3,0).reshape(CC*H*W,N)
-      out, cache =batchnorm_forward(x_split,gamma[num_group*i:num_group*(i+1)],beta[num_group*i:num_group*(i+1)],gn_param)
-      out = out.reshape(CC,H,W,N).transpose(3,0,1,2)
-      
-      pass
+    x_split = x[:,num_group*i:num_group*(i+1),:,:]
+    N,CC,H,W = x_split.shape
+    x_split=x_split.transpose(1,2,3,0).reshape(CC*H*W,N)
+    out, cache =batchnorm_forward(x_split,gamma[num_group*i:num_group*(i+1)],beta[num_group*i:num_group*(i+1)],gn_param)
+    out = out.reshape(CC,H,W,N).transpose(3,0,1,2)
+    
+    pass  
 
     
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
