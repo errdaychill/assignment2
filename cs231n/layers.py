@@ -385,7 +385,7 @@ def layernorm_forward(x, gamma, beta, ln_param):
     
     ln_param['mode'] = 'train'
     ln_param['layernorm'] = 1
-    xhat, cache = batchnorm_forward(x.T, gamma.reshape((-1,1)), beta.reshape((-1,1)), ln_param)
+    xhat, cache = batchnorm_forward(x.T, gamma.reshape(-1,1), beta.reshape(-1,1), ln_param)
     out=xhat.T
     #running_mean = momentum * running_mean + (1 - momentum) * mu
     #running_var = momentum * running_var + (1 - momentum) * var
@@ -873,22 +873,28 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     #gn_param['mode'] = 'train'
     #gn_param['layernorm'] = 1 
     N,C,H,W = x.shape
-   # C/G = num_group
-
-    x=x.reshape(N*G,C/G*H*W).T
+    # C/G = num_group
+    # Jonna Eoryup da
+    x = x.reshape(N*G,C//G*H*W).T
     mu = np.mean(x)
     var = np.var(x) + eps
     std = np.sqrt(var)
     xhat = (x-mu)/std
+    xhat = xhat.T.reshape(N,C,H,W)
+    gamma = gamma.reshape(1,C,1,1)
+    beta = beta.reshape(1,C,1,1)
+    
     out = gamma*xhat + beta
-
-
+    
+    cache = (x,mu,var,std,xhat,gamma,beta)
+    
+    """ 
     x_split = x[:,num_group*i:num_group*(i+1),:,:]
     N,CC,H,W = x_split.shape
     x_split=x_split.transpose(1,2,3,0).reshape(CC*H*W,N)
     out, cache =batchnorm_forward(x_split,gamma[num_group*i:num_group*(i+1)],beta[num_group*i:num_group*(i+1)],gn_param)
     out = out.reshape(CC,H,W,N).transpose(3,0,1,2)
-    
+     """
     pass  
 
     
