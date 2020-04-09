@@ -870,6 +870,7 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # and layer normalization!                                                # 
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    global G
     #gn_param['mode'] = 'train'
     #gn_param['layernorm'] = 1 
     N,C,H,W = x.shape
@@ -885,9 +886,10 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     beta = beta.reshape(1,C,1,1)
     
     out = gamma*xhat + beta
-    
     cache = (x,mu,var,std,xhat,gamma,beta)
+    # x = (C//G*H*W,N*G)
     
+    ddd
     """ 
     x_split = x[:,num_group*i:num_group*(i+1),:,:]
     N,CC,H,W = x_split.shape
@@ -925,10 +927,28 @@ def spatial_groupnorm_backward(dout, cache):
     # This will be extremely similar to the layer norm implementation.        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+
+    # x.shape = C//G*H*W,N*G
+    # xhat.shape = N,C,H,W
+  
+
+    x,mu,var,std,xhat,gamma,beta=cache  
     N, C, H, W = dout.shape
-    dout = dout.reshape(N*G, C//G*H*W).T
+    dbeta = dout.transpose(0,2,3,1).reshape(N*H*W,C).sum(axis=0)
+    dgamma = dout.transpose(0,2,3,1).reshape(N*H*W,C).sum(axis=0)
     
-    dx, dgamma, dbeta = batchnorm_backward(dout,cache)
+
+    dxhat = gamma*dout             
+    dxhat = dout.reshape(N*G,C//G*H*W).T     
+    dx1 = dxhat/np.sqrt(var)
+    dsigma_square = np.sum(dxhat*-0.5*(x-mu)*np.power(var,-1.5),axis=0)
+    dx2 = dsigma_square*2*(x-mu)/N
+    dmu = -np.sum(dxhat/np.sqrt(var),axis=0) # (NGG,)
+    dx3 = dmu/N
+    dx = dx1 + dx2 + dx3
+    dx = dx.T.reshape(N,C,H,W)
+
+
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
