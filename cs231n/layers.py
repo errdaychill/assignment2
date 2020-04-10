@@ -889,7 +889,7 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     cache = (x,mu,var,std,xhat,gamma,beta)
     # x = (C//G*H*W,N*G)
     
-    ddd
+    
     """ 
     x_split = x[:,num_group*i:num_group*(i+1),:,:]
     N,CC,H,W = x_split.shape
@@ -936,7 +936,6 @@ def spatial_groupnorm_backward(dout, cache):
     N, C, H, W = dout.shape
     dbeta = dout.transpose(0,2,3,1).reshape(N*H*W,C).sum(axis=0)
     dgamma = dout.transpose(0,2,3,1).reshape(N*H*W,C).sum(axis=0)
-    
 
     dxhat = gamma*dout             
     dxhat = dout.reshape(N*G,C//G*H*W).T     
@@ -947,7 +946,7 @@ def spatial_groupnorm_backward(dout, cache):
     dx3 = dmu/N
     dx = dx1 + dx2 + dx3
     dx = dx.T.reshape(N,C,H,W)
-
+    kkk
 
     pass
 
